@@ -1,4 +1,4 @@
-static char *version = "@(!--#) @(#) multish.c, sversion 0.1.0, fversion 009, 26-october-2023";
+static char *version = "@(!--#) @(#) multish.c, sversion 0.1.0, fversion 010, 26-october-2023";
 
 /*
  *  multish.c
@@ -26,8 +26,8 @@ static char *version = "@(!--#) @(#) multish.c, sversion 0.1.0, fversion 009, 26
  */
 
 /*
-*/
 #define DEBUG
+*/
 
 #ifndef TRUE
 #define TRUE
@@ -130,11 +130,12 @@ void outputmidstr(s, p, start, length)
 
 /* ******************************************************************* */
 
-void outputarg(a, p, n, firstarg)
+void outputarg(a, p, n, firstarg, basestring)
   char *a;
   char  p;
   int   n;
   char *firstarg;
+  char *basestring;
 {
   while (*a != '\0') {
     if (*a != '\\') {
@@ -149,6 +150,9 @@ void outputarg(a, p, n, firstarg)
             break;
           case '@':
             outputstr(firstarg, p);
+            break;
+          case '-':
+            outputstr(basestring, p);
             break;
           default:
             outputchar(*a, p);
@@ -384,7 +388,7 @@ int main(argc, argv)
         defarg[i] = scopy;
       }
 
-      outputarg(thisarg, paddingchar, logicallinenum - 1, split[0]);
+      outputarg(thisarg, paddingchar, logicallinenum - 1, split[0], basestring);
 
       if (i != (nsplits - 1)) {
         printf(" ");
