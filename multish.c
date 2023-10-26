@@ -1,4 +1,4 @@
-static char *version = "@(!--#) @(#) multish.c, sversion 0.1.0, fversion 008, 25-october-2023";
+static char *version = "@(!--#) @(#) multish.c, sversion 0.1.0, fversion 009, 26-october-2023";
 
 /*
  *  multish.c
@@ -25,7 +25,9 @@ static char *version = "@(!--#) @(#) multish.c, sversion 0.1.0, fversion 008, 25
  *  defines
  */
 
-/* #define DEBUG */
+/*
+*/
+#define DEBUG
 
 #ifndef TRUE
 #define TRUE
@@ -38,6 +40,8 @@ static char *version = "@(!--#) @(#) multish.c, sversion 0.1.0, fversion 008, 25
 #define DEFAULT_MULTISH_FILENAME "00Multish.conf"
 
 #define DEFAULT_PADDING_CHARACTER '\0'
+
+#define DEFAULT_BASE_STRING "multish"
 
 #define MAX_LINE_LENGTH 8192
 
@@ -165,10 +169,11 @@ int main(argc, argv)
   int   argc;
   char *argv[];
 {
-  char  paddingchar;
-  int   arg;
   char *multishfilename;
   FILE *multishfile;
+  char  paddingchar;
+  char *basestring;
+  int   arg;
   int   rawlinenum;
   int   logicallinenum;
   char  line[MAX_LINE_LENGTH];
@@ -189,24 +194,63 @@ int main(argc, argv)
 
   paddingchar = DEFAULT_PADDING_CHARACTER;
 
-  if (argc >= 3) {
+  basestring = DEFAULT_BASE_STRING;
+
+  while (argc >= 2) {
+    if (strncmp(argv[1], "--", MAX_LINE_LENGTH) == 0) {
+      argv = argv + 1;
+      argc = argc - 1;
+      break;
+    }
+      
     if (strncmp(argv[1], "-f", MAX_LINE_LENGTH) == 0) {
+      if (argc < 3) {
+        fprintf(stderr, "%s: expected a configuration filename after the -f command line argument\n", progname);
+        exit(2);
+      }
+
       multishfilename = argv[2];
       argv = argv + 2;
       argc = argc - 2;
+      
+      continue;
     }
-  }
-
-  if (argc >= 3) {
+    
     if (strncmp(argv[1], "-p", MAX_LINE_LENGTH) == 0) {
+      if (argc < 3) {
+        fprintf(stderr, "%s: expected a padding chaacter after the -p command line argument\n", progname);
+        exit(2);
+      }
+
       paddingchar = argv[2][0];
       argv = argv + 2;
       argc = argc - 2;
+      
+      continue;
     }
+    
+    if (strncmp(argv[1], "-b", MAX_LINE_LENGTH) == 0) {
+      if (argc < 3) {
+        fprintf(stderr, "%s: expected a base string after the -b command line argument\n", progname);
+        exit(2);
+      }
+
+      basestring = argv[2];
+      argv = argv + 2;
+      argc = argc - 2;
+      
+      continue;
+    }
+    
+    /* not a multish argument so break out */
+    break;
   }
 
+
 #ifdef DEBUG
+  printf("*** Multish config file [%s]\n", multishfilename);
   printf("*** Padding char [%c]\n", paddingchar);
+  printf("*** Base string [%s]\n", basestring);
 #endif
 
   if ((multishfile = fopen(multishfilename, "r")) == NULL) {
@@ -235,7 +279,7 @@ int main(argc, argv)
     }
 
 #ifdef DEBUG
-    printf("[%s] [%d]\n", line, strlen(line));
+    printf("[%s] [%ld]\n", line, strlen(line));
 #endif
 
     nsplits = 0;
